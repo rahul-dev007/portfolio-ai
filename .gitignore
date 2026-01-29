@@ -76,3 +76,8 @@ app/generated/prisma/
 # =========================
 dist/
 temp/
+
+
+# ignore large videos
+public/video/
+*.mp4
