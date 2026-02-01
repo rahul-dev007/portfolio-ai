@@ -9,6 +9,7 @@ export default function PublicLayout({
     <>
       <Navbar />
       <main>{children}</main>
+     
     </>
   );
 }

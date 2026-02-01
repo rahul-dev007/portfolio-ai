@@ -1,188 +1,157 @@
-# 🚀 Portfolio AI – Full Stack Developer Portfolio
+# 🚀 Portfolio AI – Full-Stack AI Portfolio & Support System
 
-A modern, production-ready **full-stack developer portfolio platform** built with **Next.js App Router**.  
-It features an **Admin Dashboard**, **Project Management system with image & video uploads**, **AI Chat**, and a **RAG-based PDF Q&A system**.
+A **production-grade portfolio web application** built with **Next.js App Router**, featuring:
+- AI-powered PDF RAG chatbot
+- Realtime visitor ↔ admin support chat
+- Secure admin dashboard
+- Modern full-stack architecture
 
-This project is designed to be **scalable**, **secure**, and **suitable for real-world SaaS, freelance, or portfolio use**.
-
----
-
-## 🌐 Live Demo
-
-🔗 **Live URL:** _(Add your Vercel deployment link here)_  
-Example: https://your-portfolio.vercel.app
+This project demonstrates **real-world SaaS patterns**, not demo code.
 
 ---
 
 ## ✨ Features
 
-### 👤 Public Website
-- Portfolio projects listing
-- Project details page (image + video support)
-- Resume page
-- Contact form
-- AI Chat interface (ChatGPT-style)
-- Fully responsive & modern UI
+### 🌐 Public Portfolio
+- Home, Projects, Resume, Contact pages
+- Dynamic project pages (slug-based)
+- Modern UI with animations
+- Floating support chat icon (Messenger-style)
 
----
+### 🤖 AI Chat (PDF RAG)
+- Upload PDFs and activate/deactivate knowledge sources
+- Chunking & context-grounded answers
+- Anti-hallucination rules (“I don’t know” fallback)
+- Graceful handling of AI rate limits (Gemini free tier)
+- Database-backed chat history
 
-### 🔐 Admin Dashboard
+### 💬 Realtime Support Chat
+- Visitor chat without login (guest ID)
+- Realtime messaging using **Pusher**
+- Admin inbox with conversation threads
+- Global admin notification for new messages
+- Optimistic UI (messages appear instantly)
+
+### 🛠 Admin Dashboard
 - Secure admin authentication (NextAuth)
-- Full CRUD for projects
-- Image upload (Cloudinary via server)
-- Video upload (Direct Cloudinary – supports large files with progress)
-- Live URL & GitHub URL support
-- Featured projects
-- PDF Knowledge Management (RAG)
-  - Upload PDFs
-  - Vector embeddings
-  - AI answers based on uploaded PDFs
-- Contact messages management
-- Real-time UI updates
+- Projects CRUD
+- PDF management (upload, activate, toggle)
+- Contact messages
+- Support chat inbox
 
 ---
 
-### 🤖 AI & RAG System
-- AI chat endpoint
-- PDF document ingestion
-- Vector search using embeddings
-- Message source tracking
-
----
-
-## 🧠 Tech Stack
+## 🧱 Tech Stack
 
 ### Frontend
-- Next.js 16 (App Router + Turbopack)
-- React 18
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Tailwind CSS**
+- **Lucide Icons**
 
 ### Backend
-- Next.js API Routes
-- Prisma ORM
-- PostgreSQL
-- NextAuth (Credentials-based authentication)
+- **Next.js API Routes**
+- **Prisma ORM**
+- **PostgreSQL (Neon)**
 
-### AI & Search
-- OpenAI / compatible LLM
-- Vector embeddings
-- RAG pipeline
+### Auth
+- **NextAuth.js**
+- Credentials provider
+- Role-based access (ADMIN)
 
-### Media Storage
-- Cloudinary (Images & Videos)
-- Image upload via server
-- Video upload directly from browser (no timeout, progress supported)
+### AI
+- **Google Gemini API (Free Tier)**
+- PDF-based RAG (context-only answers)
+- Safe fallback on quota exhaustion
 
----
+### Realtime
+- **Pusher (WebSockets)**
 
-## 📁 Project Structure
-
-portfolio-ai/
-├── prisma/
-│ ├── schema.prisma
-│ └── migrations/
-│
-├── src/
-│ ├── app/
-│ │ ├── (public)/
-│ │ ├── admin/
-│ │ ├── api/
-│ │ └── layout.tsx
-│ │
-│ ├── components/
-│ │ ├── ui/
-│ │ ├── navbar.tsx
-│ │ └── admin-sidebar.tsx
-│ │
-│ ├── lib/
-│ │ ├── prisma.ts
-│ │ ├── auth.ts
-│ │ ├── cloudinary.ts
-│ │ └── ai.ts
-│ │
-│ └── types/
-│
-├── public/
-├── .env
-├── package.json
-└── README.md
-
+### Storage
+- **Cloudinary** (images & videos)
 
 ---
 
-## 🗄️ Database Schema (Highlights)
+## 🗂 Database Highlights
 
-- User / Account / Session (NextAuth)
-- Project (Portfolio projects)
-- PdfDocument & PdfChunk (RAG system)
-- Chat / Message / MessageSource
-- ContactMessage
-
-**ORM:** Prisma  
-**Database:** PostgreSQL
+- Users, Sessions, Accounts (NextAuth)
+- Projects
+- PDF Documents & Chunks
+- AI Chat Messages
+- Support Threads & Messages
+- Contact Messages
 
 ---
 
 ## ⚙️ Environment Variables
 
-Create a `.env` file in the root:
+Create a `.env` file:
 
 ```env
 DATABASE_URL=postgresql://...
-
 NEXTAUTH_SECRET=your_secret
 NEXTAUTH_URL=http://localhost:3000
 
+# Gemini AI
+GEMINI_API_KEY=your_gemini_key
+GEMINI_MODEL=gemini-2.5-flash
+
+# Pusher
+PUSHER_APP_ID=xxxx
+PUSHER_KEY=xxxx
+PUSHER_SECRET=xxxx
+PUSHER_CLUSTER=ap2
+
+NEXT_PUBLIC_PUSHER_KEY=xxxx
+NEXT_PUBLIC_PUSHER_CLUSTER=ap2
+
+# Cloudinary
 CLOUDINARY_CLOUD_NAME=xxxx
 CLOUDINARY_API_KEY=xxxx
 CLOUDINARY_API_SECRET=xxxx
-
-OPENAI_API_KEY=xxxx
-▶️ Run Locally
-# Install dependencies
+🧪 Local Development
 npm install
-
-# Run development server
+npx prisma db push
+npx prisma generate
 npm run dev
-App will run at:
-👉 http://localhost:3000
+Open:
 
-🏗️ Production Build
-npm run build
-npm start
+http://localhost:3000 → Public site
+
+http://localhost:3000/admin-login → Admin panel
+
 🔐 Admin Access
-Admin routes are protected
+Admin authentication via NextAuth
 
-Only users with role = ADMIN can access the admin dashboard
+Role-protected routes
 
-🎯 Why This Project?
-Real-world full-stack architecture
+Guest users cannot access admin pages
 
-Handles large media uploads safely
+🧠 Design Philosophy
+Production-first mindset
 
-Uses modern Next.js App Router
+Graceful failure over crashes
 
-Demonstrates AI + RAG integration
+Clear separation of concerns
 
-Suitable for portfolio, SaaS base, or freelance projects
+Real-time UX similar to modern SaaS tools
 
-📌 Future Improvements
-Role-based access control (RBAC)
+Defensive AI usage (rate-limit & fallback aware)
 
-Analytics dashboard
+📌 Notes
+Gemini free tier has rate limits; the app handles this gracefully.
 
-Project categories & tags
+Prisma + Neon dev logs may show connection warnings (expected in dev mode).
 
-Rate limiting for AI chat
+Optimized for deployment on Vercel.
 
-Dark mode toggle
+📸 Screenshots
+(Add screenshots or GIFs here for extra impact)
 
-👨‍💻 Author
+📄 License
+MIT
+
+👋 Author
 Rahul Biswas
-Full Stack Developer (MERN / Next.js)
-
-⭐ Support
-If you like this project, please ⭐ star the repository.
-
+Full-Stack Developer
+AI • Next.js • Prisma • Realtime Systems

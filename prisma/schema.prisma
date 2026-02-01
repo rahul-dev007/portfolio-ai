@@ -7,10 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/* =========================
-   USER & AUTH (NextAuth)
-========================= */
-
+/**
+ * =========================
+ * USER & AUTH (NextAuth)
+ * =========================
+ */
 model User {
   id        String   @id @default(cuid())
   name      String?
@@ -24,6 +25,9 @@ model User {
   accounts Account[]
   sessions Session[]
   chats    Chat[]
+
+  // ✅ ADD THIS
+  supportThreads SupportThread[]
 }
 
 model Account {
@@ -62,9 +66,11 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-/* =========================
-   PORTFOLIO PROJECTS
-========================= */
+/**
+ * =========================
+ * PORTFOLIO PROJECTS
+ * =========================
+ */
 
 model Project {
   id          String   @id @default(cuid())
@@ -82,9 +88,11 @@ model Project {
   updatedAt DateTime @updatedAt
 }
 
-/* =========================
-   PDF DOCUMENTS (RAG)
-========================= */
+/**
+ * =========================
+ * PDF DOCUMENTS (RAG)
+ * =========================
+ */
 
 model PdfDocument {
   id        String   @id @default(cuid())
@@ -93,26 +101,27 @@ model PdfDocument {
   isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  chunks    PdfChunk[]
+  chunks PdfChunk[]
 }
 
 model PdfChunk {
-  id        String   @id @default(cuid())
+  id        String                 @id @default(cuid())
   docId     String
   content   String
-  embedding Unsupported("vector")?  // ✅ OPTIONAL
-  createdAt DateTime @default(now())
+  embedding Unsupported("vector")? // ✅ OPTIONAL
+  createdAt DateTime               @default(now())
 
-  document  PdfDocument @relation(fields: [docId], references: [id], onDelete: Cascade)
-  sources   MessageSource[]
+  document PdfDocument     @relation(fields: [docId], references: [id], onDelete: Cascade)
+  sources  MessageSource[]
 
   @@index([docId])
 }
 
-
-/* =========================
-   AI CHAT SYSTEM
-========================= */
+/**
+ * =========================
+ * AI CHAT SYSTEM
+ * =========================
+ */
 
 model Chat {
   id        String   @id @default(cuid())
@@ -121,8 +130,8 @@ model Chat {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  messages  Message[]
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages Message[]
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Message {
@@ -132,17 +141,17 @@ model Message {
   content   String
   createdAt DateTime    @default(now())
 
-  chat      Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  sources   MessageSource[]
+  chat    Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sources MessageSource[]
 }
 
 model MessageSource {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   messageId String
   chunkId   String
 
-  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  chunk     PdfChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  message Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  chunk   PdfChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 }
 
 enum MessageRole {
@@ -151,30 +160,74 @@ enum MessageRole {
   SYSTEM
 }
 
-/* =========================
-   AI SETTINGS (OPTIONAL)
-========================= */
+/**
+ * =========================
+ * AI SETTINGS (OPTIONAL)
+ * =========================
+ */
 
 model AiSetting {
-  id        String   @id @default(cuid())
-  provider  String   // openai, groq, etc
-  model     String   // gpt-4.1, llama3, etc
-  isActive  Boolean  @default(true)
+  id       String  @id @default(cuid())
+  provider String // openai, groq, etc
+  model    String // gpt-4.1, llama3, etc
+  isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
 }
 
-/* =========================
-   CONTACT / MESSAGES
-========================= */
+/**
+ * =========================
+ * CONTACT / MESSAGES
+ * =========================
+ */
 
 model ContactMessage {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  message   String
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  message String
 
-  isRead    Boolean  @default(false)
+  isRead Boolean @default(false)
 
   createdAt DateTime @default(now())
+}
+
+/**
+ * =========================
+ * REALTIME SUPPORT CHAT
+ * =========================
+ */
+model SupportThread {
+  id        String   @id @default(cuid())
+  userId    String?
+  subject   String?
+  isClosed  Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime?    // ✅ TEMPORARY OPTIONAL
+
+  user     User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages SupportMessage[]
+
+  @@index([userId])
+}
+
+
+
+
+model SupportMessage {
+  id       String        @id @default(cuid())
+  threadId String
+  sender   SupportSender
+  content  String
+  isRead   Boolean       @default(false)
+
+  createdAt DateTime @default(now())
+
+  thread SupportThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+}
+
+enum SupportSender {
+  USER
+  ADMIN
 }

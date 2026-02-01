@@ -3,37 +3,37 @@ import { prisma } from "@/lib/prisma";
 import { generateText } from "@/lib/ai";
 
 export async function POST(req: Request) {
-  const { message } = await req.json();
+  try {
+    const { message } = await req.json();
 
-  if (!message || typeof message !== "string") {
-    return NextResponse.json(
-      { success: false, error: "Message required" },
-      { status: 400 }
-    );
-  }
+    if (!message || typeof message !== "string") {
+      return NextResponse.json(
+        { success: false, error: "Message required" },
+        { status: 400 }
+      );
+    }
 
-  // 1️⃣ Active PDF chunks only
-  const chunks = await prisma.pdfChunk.findMany({
-    where: {
-      document: { isActive: true },
-    },
-    select: { content: true },
-    take: 20, // safety limit
-  });
-
-  // ❌ No active PDF
-  if (chunks.length === 0) {
-    return NextResponse.json({
-      success: true,
-      reply: "I don’t know.",
-      grounded: false,
+    // 1️⃣ Active PDF chunks only
+    const chunks = await prisma.pdfChunk.findMany({
+      where: {
+        document: { isActive: true },
+      },
+      select: { content: true },
+      take: 20,
     });
-  }
 
-  const context = chunks.map(c => c.content).join("\n\n");
+    if (chunks.length === 0) {
+      return NextResponse.json({
+        success: true,
+        reply: "I don’t know.",
+        grounded: false,
+      });
+    }
 
-  // 2️⃣ STRICT PROMPT
-  const prompt = `
+    const context = chunks.map(c => c.content).join("\n\n");
+
+    // 2️⃣ Strict RAG prompt
+    const prompt = `
 You are Rahul's Portfolio Assistant.
 
 Rules:
@@ -48,21 +48,38 @@ Question:
 ${message}
 `;
 
-  // 3️⃣ Generate answer
-  const reply = await generateText(prompt);
+    // 3️⃣ AI call (SAFE)
+    let reply = "";
+    try {
+      reply = await generateText(prompt);
+    } catch (aiError) {
+      console.error("AI error:", aiError);
+      return NextResponse.json({
+        success: true,
+        reply: "AI service is temporarily unavailable.",
+        grounded: false,
+      });
+    }
 
-  // 4️⃣ Extra safety (anti-hallucination)
-  if (!reply || reply.toLowerCase().includes("i don't know")) {
+    // 4️⃣ Extra safety
+    if (!reply || /^i\s*(do not|don’t)\s*know/i.test(reply.trim())) {
+      return NextResponse.json({
+        success: true,
+        reply: "I don’t know.",
+        grounded: false,
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      reply: "I don’t know.",
-      grounded: false,
+      reply,
+      grounded: true,
     });
+  } catch (error) {
+    console.error("Chat route error:", error);
+    return NextResponse.json(
+      { success: false, error: "Server error" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({
-    success: true,
-    reply,
-    grounded: true,
-  });
 }

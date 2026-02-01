@@ -1,5 +1,7 @@
 import "./globals.css";
 import Providers from "./providers";
+import FloatingChat from "@/components/chat/floating-chat";
+
 
 export default function RootLayout({
   children,
@@ -27,6 +29,7 @@ export default function RootLayout({
         </div>
 
         <Providers>{children}</Providers>
+        <FloatingChat />
       </body>
     </html>
   );
