@@ -1,8 +1,7 @@
+"use client";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-
-"use client";
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
@@ -46,87 +45,33 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div
-      className="
-        min-h-screen flex items-center justify-center
-        bg-gradient-to-br from-[#05060d] via-[#0b0b12] to-black
-        animate-[gradient_12s_ease_infinite]
-      "
-    >
-      <Card
-        className="
-          w-full max-w-md rounded-2xl
-          border border-white/20
-          bg-white/5 backdrop-blur-xl
-          shadow-[0_0_40px_rgba(255,255,255,0.15)]
-        "
-      >
-        <CardHeader className="space-y-1">
-          <CardTitle
-            className="
-              text-2xl font-bold
-              bg-gradient-to-r from-white to-white/70
-              bg-clip-text text-transparent
-            "
-          >
-            Admin Login
-          </CardTitle>
-          <p className="text-sm text-white/60">
-            Secure access to dashboard
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-[#0b0b12]">
+      <Card className="w-full max-w-md bg-white/5 border border-white/20">
+        <CardHeader>
+          <CardTitle className="text-white">Admin Login</CardTitle>
         </CardHeader>
-
         <CardContent>
-          <form className="space-y-4" onSubmit={onSubmit}>
-            <div className="space-y-2">
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div>
               <Label className="text-white/80">Email</Label>
               <Input
-                type="email"
-                placeholder="admin@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="
-                  bg-black/40 border-white/20
-                  text-white placeholder:text-white/30
-                  focus:border-white/50
-                "
               />
             </div>
-
-            <div className="space-y-2">
+            <div>
               <Label className="text-white/80">Password</Label>
               <Input
                 type="password"
-                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="
-                  bg-black/40 border-white/20
-                  text-white placeholder:text-white/30
-                  focus:border-white/50
-                "
               />
             </div>
-
-            {error && (
-              <div className="rounded-md bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-400">
-                {error}
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="
-                w-full rounded-xl
-                bg-white text-black
-                hover:bg-white/90
-                transition
-              "
-            >
-              {loading ? "Authenticating…" : "Enter Dashboard"}
+            {error && <p className="text-red-400">{error}</p>}
+            <Button disabled={loading} className="w-full">
+              {loading ? "Authenticating…" : "Login"}
             </Button>
           </form>
         </CardContent>
