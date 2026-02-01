@@ -1,11 +1,9 @@
 "use client";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,9 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function AdminLoginPage() {
-  const searchParams = useSearchParams();
-  const callbackUrl =
-    searchParams.get("callbackUrl") || "/admin/dashboard";
+  const callbackUrl = "/admin/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,8 +20,8 @@ export default function AdminLoginPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setLoading(true);
+    setError(null);
 
     const res = await signIn("credentials", {
       email,
@@ -41,15 +37,18 @@ export default function AdminLoginPage() {
       return;
     }
 
-    window.location.href = res.url || callbackUrl;
+    window.location.href = callbackUrl;
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0b0b12]">
       <Card className="w-full max-w-md bg-white/5 border border-white/20">
         <CardHeader>
-          <CardTitle className="text-white">Admin Login</CardTitle>
+          <CardTitle className="text-white text-2xl font-bold">
+            Admin Login
+          </CardTitle>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
@@ -60,6 +59,7 @@ export default function AdminLoginPage() {
                 required
               />
             </div>
+
             <div>
               <Label className="text-white/80">Password</Label>
               <Input
@@ -69,9 +69,13 @@ export default function AdminLoginPage() {
                 required
               />
             </div>
-            {error && <p className="text-red-400">{error}</p>}
+
+            {error && (
+              <p className="text-sm text-red-400">{error}</p>
+            )}
+
             <Button disabled={loading} className="w-full">
-              {loading ? "Authenticating…" : "Login"}
+              {loading ? "Authenticating…" : "Enter Dashboard"}
             </Button>
           </form>
         </CardContent>
