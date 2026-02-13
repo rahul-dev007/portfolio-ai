@@ -72,7 +72,6 @@ function ProgressBar({ value }: { value: number }) {
 
 /* ================= UPLOAD HELPERS ================= */
 
-// IMAGE
 async function uploadImage(
   file: File,
   onProgress: (p: number) => void
@@ -101,7 +100,6 @@ async function uploadImage(
   });
 }
 
-// VIDEO
 async function uploadVideo(
   file: File,
   onProgress: (p: number) => void
@@ -173,6 +171,11 @@ export default function AdminProjectsPage() {
   const [editLiveUrl, setEditLiveUrl] = useState("");
   const [editGithubUrl, setEditGithubUrl] = useState("");
 
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [editVideoUrl, setEditVideoUrl] = useState("");
+  const [editImageProgress, setEditImageProgress] = useState(0);
+  const [editVideoProgress, setEditVideoProgress] = useState(0);
+
   const previewSlug = useMemo(() => {
     if (slug.trim()) return makeSlug(slug);
     if (title.trim()) return makeSlug(title);
@@ -242,6 +245,8 @@ export default function AdminProjectsPage() {
     setEditTechStackText(p.techStack.join(", "));
     setEditLiveUrl(p.liveUrl || "");
     setEditGithubUrl(p.githubUrl || "");
+    setEditImageUrl(p.imageUrl || "");
+    setEditVideoUrl(p.videoUrl || "");
     setEditOpen(true);
   }
 
@@ -262,6 +267,8 @@ export default function AdminProjectsPage() {
         techStack,
         liveUrl: editLiveUrl,
         githubUrl: editGithubUrl,
+        imageUrl: editImageUrl,
+        videoUrl: editVideoUrl,
       }),
     });
 
@@ -288,7 +295,6 @@ export default function AdminProjectsPage() {
         </CardHeader>
 
         <CardContent className="grid gap-6 lg:grid-cols-2">
-          {/* LEFT */}
           <div className="space-y-4">
             <Input className="text-white" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <Textarea className="text-white" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -297,8 +303,9 @@ export default function AdminProjectsPage() {
             <Input className="text-white" placeholder="GitHub URL" value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} />
           </div>
 
-          {/* RIGHT */}
           <div className="space-y-4">
+
+            {/* IMAGE CREATE */}
             <div>
               <Label className="text-white/80">Project Image</Label>
               <Input
@@ -311,7 +318,9 @@ export default function AdminProjectsPage() {
                   const url = await uploadImage(f, setImageProgress);
                   setImageUrl(url);
                 }}
+                className="bg-black/40 border-white/10 text-white"
               />
+
               {imageProgress > 0 && (
                 <>
                   <ProgressBar value={imageProgress} />
@@ -320,13 +329,15 @@ export default function AdminProjectsPage() {
                   </p>
                 </>
               )}
+
               {imageUrl && (
-                <div className="relative h-40 rounded-xl overflow-hidden border border-white/10">
+                <div className="relative h-40 rounded-xl overflow-hidden border border-white/10 mt-2">
                   <Image src={imageUrl} alt="preview" fill className="object-cover" />
                 </div>
               )}
             </div>
 
+            {/* VIDEO CREATE */}
             <div>
               <Label className="text-white/80">Project Video</Label>
               <Input
@@ -340,6 +351,7 @@ export default function AdminProjectsPage() {
                   setVideoUrl(url);
                 }}
               />
+
               {videoProgress > 0 && (
                 <>
                   <ProgressBar value={videoProgress} />
@@ -348,6 +360,7 @@ export default function AdminProjectsPage() {
                   </p>
                 </>
               )}
+
               {videoUrl && (
                 <video src={videoUrl} controls className="w-full rounded-xl border border-white/10" />
               )}
@@ -421,23 +434,88 @@ export default function AdminProjectsPage() {
       </Card>
 
       {/* EDIT MODAL */}
+      {/* EDIT MODAL */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-h-[90vh] overflow-hidden p-0 border border-white/10 bg-[#0b0b12] text-white rounded-2xl">
+          <div className="flex flex-col max-h-[90vh]">
+            <div className="px-6 pt-6 pb-4 border-b border-white/10 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10">
+              <DialogTitle className="bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
+                Edit Project
+              </DialogTitle>
+            </div>
 
-          <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-          <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
-          <Input value={editTechStackText} onChange={(e) => setEditTechStackText(e.target.value)} />
-          <Input value={editLiveUrl} onChange={(e) => setEditLiveUrl(e.target.value)} />
-          <Input value={editGithubUrl} onChange={(e) => setEditGithubUrl(e.target.value)} />
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
 
-          <Button onClick={updateProject} className="w-full">
-            Update Project
-          </Button>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+              <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+              <Input value={editTechStackText} onChange={(e) => setEditTechStackText(e.target.value)} />
+              <Input value={editLiveUrl} onChange={(e) => setEditLiveUrl(e.target.value)} />
+              <Input value={editGithubUrl} onChange={(e) => setEditGithubUrl(e.target.value)} />
+
+              {/* IMAGE UPDATE */}
+              <div>
+                <Label className="text-white/80">Update Image</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    setEditImageProgress(1);
+                    const url = await uploadImage(f, setEditImageProgress);
+                    setEditImageUrl(url);
+                  }}
+                />
+
+                {editImageProgress > 0 && <ProgressBar value={editImageProgress} />}
+
+                {editImageUrl && (
+                  <div className="relative h-32 rounded-xl overflow-hidden border border-white/10 mt-2">
+                    <Image src={editImageUrl} alt="preview" fill className="object-cover" />
+                  </div>
+                )}
+              </div>
+
+              {/* VIDEO UPDATE */}
+              <div>
+                <Label className="text-white/80">Update Video</Label>
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    setEditVideoProgress(1);
+                    const url = await uploadVideo(f, setEditVideoProgress);
+                    setEditVideoUrl(url);
+                  }}
+                />
+
+                {editVideoProgress > 0 && <ProgressBar value={editVideoProgress} />}
+
+                {editVideoUrl && (
+                  <video
+                    src={editVideoUrl}
+                    controls
+                    className="w-full rounded-xl border border-white/10 mt-2"
+                  />
+                )}
+              </div>
+
+            </div>
+
+            <div className="px-6 py-4 border-t border-white/10 bg-black/60 backdrop-blur">
+              <Button
+                onClick={updateProject}
+                className="w-full h-11 bg-gradient-to-r from-cyan-400 via-purple-500 to-fuchsia-500 text-white shadow-lg"
+              >
+                Update Project
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
+ 
     </div>
   );
 }
