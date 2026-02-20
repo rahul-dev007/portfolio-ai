@@ -1,101 +1,120 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
-  Menu,
   ChevronDown,
   LogOut,
   User,
-  Zap,
+  Bell,
+  Menu,
   LayoutDashboard,
   FolderKanban,
   FileText,
   MessageSquare,
+  LifeBuoy,
 } from "lucide-react";
 import Link from "next/link";
+import { pusherClient } from "@/lib/pushar/pusher-client";
+
+const adminLinks = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Projects", href: "/admin/projects", icon: FolderKanban },
+  { label: "PDF Knowledge", href: "/admin/pdf", icon: FileText },
+  { label: "Contact Messages", href: "/admin/messages", icon: MessageSquare },
+  { label: "Support Chat", href: "/admin/chat/support", icon: LifeBuoy },
+];
 
 export default function AdminTopbar() {
-  const [userOpen, setUserOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+
+  const fetchUnread = async () => {
+    const res = await fetch("/api/support/admin/unread-count", {
+      cache: "no-store",
+    });
+    const data = await res.json();
+    setUnread(data.count || 0);
+  };
+
+  useEffect(() => {
+    fetchUnread();
+
+    const channel = pusherClient.subscribe("admin-support");
+
+    channel.bind("new-support", () => {
+      fetchUnread();
+    });
+
+    return () => {
+      pusherClient.unsubscribe("admin-support");
+    };
+  }, []);
 
   return (
-    <>
-      {/* ===== TOPBAR ===== */}
-      <header
-        className="
-          sticky top-0 z-50
-          border-b border-cyan-400/20
-          bg-black/70 backdrop-blur-xl
-          shadow-[0_0_40px_rgba(34,211,238,0.15)]
-        "
-      >
-        <div className="flex h-14 items-center justify-between px-4 md:px-6">
-          {/* LEFT */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="
-                md:hidden p-2 rounded-md
-                text-cyan-300
-                hover:bg-cyan-500/10
-                hover:shadow-[0_0_15px_rgba(34,211,238,0.8)]
-                transition
-              "
-            >
-              <Menu size={20} />
-            </button>
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-xl">
+      <div className="flex h-14 items-center justify-between px-4">
 
-            <span
-              className="
-                flex items-center gap-2
-                text-sm font-extrabold tracking-widest
-                bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-purple-500
-                bg-clip-text text-transparent
-                animate-pulse
-              "
-            >
-              <Zap size={14} />
-              ADMIN CORE
-            </span>
-          </div>
+        {/* LEFT - ONLY ONE ICON IN MOBILE */}
+        <div className="relative">
 
-          {/* RIGHT */}
-          <div className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 text-cyan-400 md:hidden"
+          >
+            <Menu size={22} />
+          </button>
+
+          {/* DROPDOWN */}
+          {menuOpen && (
+            <div className="absolute left-0 mt-3 w-60 rounded-xl bg-gradient-to-br from-[#111] to-[#1a1a2e] border border-cyan-400/20 shadow-xl p-3 space-y-1 md:hidden">
+
+              {adminLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/80 transition hover:bg-cyan-500/10 hover:pl-5"
+                  >
+                    <Icon size={16} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT */}
+        <div className="flex items-center gap-4">
+
+          {/* 🔔 RED BELL */}
+          <Link href="/admin/chat/support" className="relative">
+            <Bell className="text-red-500 hover:text-red-400 transition" />
+            {unread > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                {unread}
+              </span>
+            )}
+          </Link>
+
+          {/* USER */}
+          <div className="relative hidden md:block">
             <button
               onClick={() => setUserOpen(!userOpen)}
-              className="
-                flex items-center gap-2 px-3 py-1.5
-                rounded-md
-                text-sm text-white/80
-                border border-white/10
-                hover:border-cyan-400/40
-                hover:shadow-[0_0_20px_rgba(34,211,238,0.6)]
-                transition
-              "
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-white/80 border border-white/10"
             >
               <User size={16} />
-              <span className="hidden sm:block">ADMIN</span>
-              <ChevronDown
-                size={14}
-                className={`transition ${
-                  userOpen ? "rotate-180 text-cyan-400" : ""
-                }`}
-              />
+              ADMIN
+              <ChevronDown size={14} />
             </button>
 
-            {/* USER DROPDOWN */}
             {userOpen && (
-              <div
-                className="
-                  absolute right-0 mt-3 w-44
-                  rounded-xl
-                  border border-cyan-400/30
-                  bg-black/90 backdrop-blur-xl
-                  shadow-[0_0_40px_rgba(236,72,153,0.35)]
-                  animate-in fade-in zoom-in-95 slide-in-from-top-2
-                "
-              >
+              <div className="absolute right-0 mt-3 w-44 rounded-xl border bg-black">
                 <button
                   onClick={() =>
                     signOut({
@@ -103,14 +122,7 @@ export default function AdminTopbar() {
                       callbackUrl: "/admin-login",
                     })
                   }
-                  className="
-                    flex w-full items-center gap-3
-                    px-4 py-3 text-sm
-                    text-red-400
-                    hover:bg-red-500/10
-                    hover:shadow-[0_0_20px_rgba(239,68,68,0.6)]
-                    transition
-                  "
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-400"
                 >
                   <LogOut size={16} />
                   Logout
@@ -118,69 +130,9 @@ export default function AdminTopbar() {
               </div>
             )}
           </div>
+
         </div>
-      </header>
-
-      {/* ===== MOBILE SIDEBAR ===== */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          {/* BACKDROP */}
-          <div
-            onClick={() => setMenuOpen(false)}
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          />
-
-          {/* SIDEBAR */}
-          <aside
-            className="
-              absolute left-0 top-0 h-full w-64
-              bg-[#0b0b12]
-              border-r border-cyan-400/20
-              shadow-[0_0_40px_rgba(34,211,238,0.25)]
-              animate-in slide-in-from-left duration-300
-            "
-          >
-            <div className="px-6 py-5 border-b border-white/10">
-              <h2
-                className="
-                  text-lg font-extrabold tracking-widest uppercase
-                  bg-gradient-to-r from-cyan-400 to-fuchsia-500
-                  bg-clip-text text-transparent
-                "
-              >
-                Admin Panel
-              </h2>
-            </div>
-
-            <nav className="px-3 py-4 space-y-1 text-sm">
-              {[
-                ["Dashboard", "/admin/dashboard", LayoutDashboard],
-                ["Projects", "/admin/projects", FolderKanban],
-                ["PDF Knowledge", "/admin/pdf", FileText],
-                ["Messages", "/admin/messages", MessageSquare],
-              ].map(([label, href, Icon]: any) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMenuOpen(false)}
-                  className="
-                    flex items-center gap-3
-                    rounded-md px-3 py-2
-                    text-white/70
-                    hover:bg-cyan-500/10
-                    hover:text-white
-                    hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]
-                    transition
-                  "
-                >
-                  <Icon size={18} />
-                  {label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
-        </div>
-      )}
-    </>
+      </div>
+    </header>
   );
 }

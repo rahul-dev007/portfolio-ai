@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -10,12 +10,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const thread = await prisma.supportThread.findFirst({
-    where: { isClosed: false },
-    orderBy: { createdAt: "desc" },
+  const count = await prisma.supportMessage.count({
+    where: {
+      sender: "USER",
+      isRead: false,
+    },
   });
 
-  return NextResponse.json({
-    threadId: thread?.id ?? null,
-  });
+  return NextResponse.json({ count });
 }

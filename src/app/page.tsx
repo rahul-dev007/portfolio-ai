@@ -12,17 +12,34 @@ export default function HomePage() {
     <>
       <Navbar />
 
-      <main>
-        <HeroSlider />
-        <SkillsGlobe />
+      <main className="scroll-smooth snap-y snap-mandatory">
 
-        {/* 🔥 lightweight preview instead of full chat */}
-        <ChatPreview />
+        <section id="hero" className="snap-start min-h-screen">
+          <HeroSlider />
+        </section>
 
-        <ProjectsPage />
-        <ResumePage />
-        <Contact />
+        <section id="skills" className="snap-start min-h-screen">
+          <SkillsGlobe />
+        </section>
+
+        <section id="chat" className="snap-start ">
+          <ChatPreview />
+        </section>
+
+        <section id="projects" className="snap-start min-h-screen">
+          <ProjectsPage />
+        </section>
+
+        <section id="resume" className="snap-start min-h-screen">
+          <ResumePage />
+        </section>
+
+        <section id="contact" className="snap-start">
+          <Contact />
+        </section>
+
         <Footer />
+
       </main>
     </>
   );

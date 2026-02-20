@@ -13,6 +13,11 @@ export default function SupportAlert() {
 
     channel.bind("new-support", () => {
       setHasNew(true);
+
+      // 🔥 auto hide after 3s
+      setTimeout(() => {
+        setHasNew(false);
+      }, 3000);
     });
 
     return () => {
@@ -24,14 +29,17 @@ export default function SupportAlert() {
 
   return (
     <div
-      onClick={() => router.push("/admin/chat/support")}
+      onClick={() => {
+        setHasNew(false); // hide instantly on click
+        router.push("/admin/chat/support");
+      }}
       className="
         fixed bottom-6 right-6 z-50
         cursor-pointer
         rounded-xl bg-red-600 px-4 py-3
         text-sm font-medium text-white
         shadow-lg
-        animate-pulse
+        transition-opacity duration-300
       "
     >
       🔔 New support message

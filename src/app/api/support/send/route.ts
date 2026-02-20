@@ -13,7 +13,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔍 find existing open thread for this guest
     let thread = await prisma.supportThread.findFirst({
       where: {
         subject: guestId,
@@ -21,17 +20,15 @@ export async function POST(req: Request) {
       },
     });
 
-    // 🆕 create new thread if not exists
     if (!thread) {
       thread = await prisma.supportThread.create({
         data: {
           subject: guestId,
-          userId: null, // guest
+          userId: null,
         },
       });
     }
 
-    // 💬 save message
     const message = await prisma.supportMessage.create({
       data: {
         threadId: thread.id,
@@ -40,22 +37,28 @@ export async function POST(req: Request) {
       },
     });
 
-    // ⚡ realtime (thread specific)
+    // 🔥 IMPORTANT: update thread timestamp
+    await prisma.supportThread.update({
+      where: { id: thread.id },
+      data: { updatedAt: new Date() },
+    });
+
+    // 🔥 Realtime thread message
     await pusher.trigger(
       `support-thread-${thread.id}`,
       "new-message",
       message
     );
 
-    // 🔔 🔔 🔔 ADMIN GLOBAL NOTIFICATION (THIS WAS MISSING)
+    // 🔔 Admin notification
     await pusher.trigger("admin-support", "new-support", {
       threadId: thread.id,
-      preview: content.slice(0, 50),
     });
 
     return NextResponse.json({
       success: true,
       threadId: thread.id,
+      message,
     });
   } catch (e) {
     console.error(e);

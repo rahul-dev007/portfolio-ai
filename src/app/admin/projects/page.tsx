@@ -434,7 +434,6 @@ export default function AdminProjectsPage() {
       </Card>
 
       {/* EDIT MODAL */}
-      {/* EDIT MODAL */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-h-[90vh] overflow-hidden p-0 border border-white/10 bg-[#0b0b12] text-white rounded-2xl">
           <div className="flex flex-col max-h-[90vh]">

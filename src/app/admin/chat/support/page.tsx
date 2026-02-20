@@ -13,42 +13,32 @@ export default function AdminSupportPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
 
-  /* =========================
-     Load inbox threads
-  ========================= */
+  const loadThreads = async () => {
+    const res = await fetch("/api/support/admin/threads");
+    const data = await res.json();
+    setThreads(data);
+  };
+
   useEffect(() => {
-    fetch("/api/support/admin/threads")
-      .then((res) => res.json())
-      .then((data) => {
-        setThreads(data);
+    loadThreads();
+  }, []);
 
-        // 🔥 auto-select latest thread if none selected
-        if (!activeThreadId && data.length > 0) {
-          router.replace(
-            `/admin/chat/support?threadId=${data[0].id}`
-          );
-        }
-      });
-  }, [activeThreadId, router]);
-
-  /* =========================
-     Load messages for active thread
-  ========================= */
   useEffect(() => {
     if (!activeThreadId) return;
 
-    setMessages([]);
-
-    fetch(
-      `/api/support/admin/messages?threadId=${activeThreadId}`
-    )
+    fetch(`/api/support/admin/messages?threadId=${activeThreadId}`)
       .then((res) => res.json())
       .then(setMessages);
+
+    // 🔥 auto mark read
+    fetch("/api/support/admin/mark-read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId: activeThreadId }),
+    });
+
   }, [activeThreadId]);
 
-  /* =========================
-     Realtime subscribe
-  ========================= */
   useEffect(() => {
     if (!activeThreadId) return;
 
@@ -57,7 +47,20 @@ export default function AdminSupportPage() {
     );
 
     channel.bind("new-message", (msg: any) => {
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+
+      loadThreads(); // 🔥 refresh inbox
+
+      if (msg.sender === "USER") {
+        fetch("/api/support/admin/mark-read", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ threadId: activeThreadId }),
+        });
+      }
     });
 
     return () => {
@@ -67,107 +70,88 @@ export default function AdminSupportPage() {
     };
   }, [activeThreadId]);
 
-  const sendReply = async () => {
-    if (!text.trim() || !activeThreadId) return;
+ const sendReply = async () => {
+  if (!text.trim() || !activeThreadId) return;
 
-    await fetch("/api/support/admin-reply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        threadId: activeThreadId,
-        content: text,
-      }),
-    });
+  await fetch("/api/support/admin-reply", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      threadId: activeThreadId,
+      content: text,
+    }),
+  });
 
-    setText("");
-  };
+  setText("");
+};
+
 
   return (
     <div className="grid h-full grid-cols-3 gap-6">
-      {/* ================= INBOX ================= */}
+      {/* Inbox */}
       <div className="col-span-1 rounded-xl bg-white/5 p-4">
         <h3 className="mb-3 text-sm font-semibold text-white">
           Support Inbox
         </h3>
 
-        {threads.length === 0 && (
-          <p className="text-xs text-white/50">
-            No conversations yet
-          </p>
-        )}
-
-        <div className="space-y-2">
-          {threads.map((t) => (
-            <div
-              key={t.id}
-              onClick={() =>
-                router.push(
-                  `/admin/chat/support?threadId=${t.id}`
-                )
-              }
-              className={`cursor-pointer rounded-lg p-3 transition ${
-                t.id === activeThreadId
-                  ? "bg-white/20"
-                  : "hover:bg-white/10"
-              }`}
-            >
-              <p className="text-xs text-white/60">
-                {t.subject ?? "Guest user"}
-              </p>
-              <p className="truncate text-sm text-white">
-                {t.messages?.[0]?.content}
-              </p>
-            </div>
-          ))}
-        </div>
+        {threads.map((t) => (
+          <div
+            key={t.id}
+            onClick={() =>
+              router.push(`/admin/chat/support?threadId=${t.id}`)
+            }
+            className={`cursor-pointer rounded-lg p-3 ${
+              t.id === activeThreadId
+                ? "bg-white/20"
+                : "hover:bg-white/10"
+            }`}
+          >
+            <p className="text-xs text-white/60">
+              {t.subject ?? "Guest"}
+            </p>
+            <p className="truncate text-sm text-white">
+              {t.messages?.[0]?.content}
+            </p>
+            {t._count?.messages > 0 && (
+              <span className="text-xs text-red-400">
+                {t._count.messages} new
+              </span>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* ================= CHAT ================= */}
+      {/* Chat */}
       <div className="col-span-2 flex flex-col rounded-xl bg-white/5">
-        {!activeThreadId ? (
-          <div className="flex h-full items-center justify-center text-white/50">
-            Select a conversation from the inbox
-          </div>
-        ) : (
-          <>
-            <div className="border-b border-white/10 px-4 py-3 text-sm text-white">
-              Active Support Chat
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              className={`max-w-[70%] rounded-xl px-3 py-2 text-sm ${
+                m.sender === "ADMIN"
+                  ? "ml-auto bg-blue-600 text-white"
+                  : "bg-white/10 text-white"
+              }`}
+            >
+              {m.content}
             </div>
+          ))}
+          <div id="chat-bottom" />
+        </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`max-w-[70%] rounded-xl px-3 py-2 text-sm ${
-                    m.sender === "ADMIN"
-                      ? "ml-auto bg-blue-600 text-white"
-                      : "bg-white/10 text-white"
-                  }`}
-                >
-                  {m.content}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-2 border-t border-white/10 p-3">
-              <input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Reply..."
-                className="flex-1 rounded-md bg-white/10 px-3 py-2 text-sm text-white outline-none"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendReply();
-                }}
-              />
-              <button
-                onClick={sendReply}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white"
-              >
-                Send
-              </button>
-            </div>
-          </>
-        )}
+        <div className="flex gap-2 border-t border-white/10 p-3">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="flex-1 rounded-md bg-white/10 px-3 py-2 text-sm text-white outline-none"
+          />
+          <button
+            onClick={sendReply}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white"
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -19,23 +19,28 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-[#0b0b12] text-white">
-      {/* SIDEBAR */}
-      <AdminSidebar />
+
+      {/* SIDEBAR - Desktop Only */}
+      <div className="hidden md:block">
+        <AdminSidebar />
+      </div>
 
       {/* MAIN AREA */}
       <div className="flex flex-1 flex-col overflow-hidden">
+
+        {/* Topbar always visible */}
         <AdminTopbar />
 
         <SupportAlert />
 
-        {/* CONTENT WRAPPER */}
         <main className="flex-1 overflow-y-auto">
-          {/* width constraint ONLY here */}
-          <div className="mx-auto w-full max-w-7xl px-6 py-6">
+          <div className="mx-auto w-full max-w-7xl px-4 md:px-6 py-6">
             {children}
           </div>
+          
         </main>
       </div>
     </div>
   );
 }
+

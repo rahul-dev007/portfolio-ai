@@ -8,6 +8,7 @@ import {
   FolderKanban,
   FileText,
   MessageSquare,
+  LifeBuoy,
 } from "lucide-react";
 
 const adminLinks = [
@@ -27,10 +28,16 @@ const adminLinks = [
     icon: FileText,
   },
   {
-    label: "Messages",
+    label: "Contact Messages",
     href: "/admin/messages",
     icon: MessageSquare,
   },
+  {
+    label: "Support Chat",
+    href: "/admin/chat/support",
+    icon: LifeBuoy, // 🔥 Support icon
+  },
+
 ];
 
 export default function AdminSidebar() {
@@ -44,7 +51,6 @@ export default function AdminSidebar() {
         bg-black/60 backdrop-blur-xl
       "
     >
-      {/* BRAND */}
       <div className="px-6 py-5 border-b border-white/10">
         <h2
           className="
@@ -57,7 +63,6 @@ export default function AdminSidebar() {
         </h2>
       </div>
 
-      {/* NAV */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {adminLinks.map((item) => {
           const active = pathname.startsWith(item.href);
